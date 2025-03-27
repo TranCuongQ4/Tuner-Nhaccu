@@ -5,9 +5,9 @@ html {
 h1 {
   font-size: 20px;
   color: #E09D0E;
-  margin-top: 40px; /* Khoảng cách 40px từ phía trên */
-  margin-left: 20px;  
- }
+  margin-top: 40px;
+  margin-left: 20px;
+}
 
 body {
   position: fixed;
@@ -84,7 +84,7 @@ body {
 }
 
 .frequency span {
-  font-size: 50%;
+  font-size: 40%;
   margin-left: 0.25em;
 }
 
@@ -93,8 +93,8 @@ body {
   left: 0;
   right: 0;
   bottom: 50%;
-  width: 400px;
-  height: 33%;
+  width: 1100px;
+  height: 34%;
   margin: 0 auto 5vh auto;
   color: #2ecc71;
 }
@@ -122,7 +122,7 @@ body {
 }
 
 .meter-scale {
-  width: 1px;
+  width: 4px;
   height: 100%;
   transform-origin: bottom;
   transition: transform 0.2s;
@@ -133,13 +133,15 @@ body {
 }
 
 .meter-scale-strong {
-  width: 2px;
-  border-top-width: 20px;
+  width: 4px;
+  border-top-width: 30px;
 }
 
 .frequency-bars {
   position: fixed;
   bottom: 0;
+  height: 40%;
+  width: 100%;
 }
 
 @media (max-width: 768px) {
@@ -170,4 +172,17 @@ body {
   position: absolute;
   top: 16px;
   right: 16px;
+  opacity: 0; /* Ẩn phần tử */
+  pointer-events: none; /* Ngăn chặn việc tương tác với phần tử */
+}
+
+.auto input[type="checkbox"] {
+  opacity: 0; /* Ẩn hộp kiểm */
+  pointer-events: none; /* Ngăn chặn việc tương tác với hộp kiểm */
+  position: absolute;
+}
+
+.auto:before {
+  content: 'Tự Động Đo'; /* Thêm nội dung để hiển thị */
+  opacity: 0;
 }
