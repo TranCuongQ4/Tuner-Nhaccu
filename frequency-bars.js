@@ -14,16 +14,28 @@ const FrequencyBars = function (selector) {
 };
 
 /**
+ * Tạo một màu ngẫu nhiên ở định dạng hex
+ */
+FrequencyBars.prototype.getRandomColor = function () {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+};
+
+/**
  * @param {Uint8Array} data
  */
 FrequencyBars.prototype.update = function (data) {
     if (!this.canvasContext) return;
 
-    const length = 64; // low frequency only
+    const length = 20; // low frequency only
     const width = this.$canvas.width / length - 0.5;
     this.canvasContext.clearRect(0, 0, this.$canvas.width, this.$canvas.height);
     for (var i = 0; i < length; i += 1) {
-        this.canvasContext.fillStyle = "#ecf0f1";
+        this.canvasContext.fillStyle = this.getRandomColor(); // Sử dụng màu ngẫu nhiên
         this.canvasContext.fillRect(
             i * (width + 0.5),
             this.$canvas.height - data[i],
