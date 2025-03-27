@@ -31,7 +31,7 @@ FrequencyBars.prototype.getRandomColor = function () {
 FrequencyBars.prototype.update = function (data) {
     if (!this.canvasContext) return;
 
-    const length = 20; // low frequency only
+    const length = 150; // low frequency only
     const width = this.$canvas.width / length - 0.5;
     this.canvasContext.clearRect(0, 0, this.$canvas.width, this.$canvas.height);
     for (var i = 0; i < length; i += 1) {
