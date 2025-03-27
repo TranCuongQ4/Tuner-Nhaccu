@@ -26,27 +26,19 @@ Tuner.prototype.initGetUserMedia = function () {
         return alert("AudioContext not supported");
     }
 
-    // Older browsers might not implement mediaDevices at all, so we set an empty object first
     if (navigator.mediaDevices === undefined) {
         navigator.mediaDevices = {};
     }
 
-    // Some browsers partially implement mediaDevices. We can't just assign an object
-    // with getUserMedia as it would overwrite existing properties.
-    // Here, we will just add the getUserMedia property if it's missing.
     if (navigator.mediaDevices.getUserMedia === undefined) {
         navigator.mediaDevices.getUserMedia = function (constraints) {
-            // First get ahold of the legacy getUserMedia, if present
             const getUserMedia =
                 navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 
-            // Some browsers just don't implement it - return a rejected promise with an error
-            // to keep a consistent interface
             if (!getUserMedia) {
                 alert("getUserMedia is not implemented in this browser");
             }
 
-            // Otherwise, wrap the call to the old navigator.getUserMedia with a Promise
             return new Promise(function (resolve, reject) {
                 getUserMedia.call(navigator, constraints, resolve, reject);
             });
@@ -59,9 +51,25 @@ Tuner.prototype.startRecord = function () {
     navigator.mediaDevices
         .getUserMedia({ audio: true })
         .then(function (stream) {
-            self.audioContext.createMediaStreamSource(stream).connect(self.analyser);
+            const source = self.audioContext.createMediaStreamSource(stream);
+
+            // Thêm bộ lọc khử tiếng ồn
+            self.noiseFilter = self.audioContext.createBiquadFilter();
+            self.noiseFilter.type = "highpass"; // Lọc tần số thấp (tiếng ồn nền)
+
+            // Tần số cắt và độ dốc có thể cần điều chỉnh dựa trên môi trường cụ thể
+            self.noiseFilter.frequency.value = 80; // Cắt tần số dưới 80Hz (điều chỉnh theo nhu cầu)
+            self.noiseFilter.Q.value = 0.707; // Q = 1/sqrt(2) cho bộ lọc Butterworth (điều chỉnh theo nhu cầu)
+
+            // Giảm gain của bộ lọc để giảm tiếng ồn (điều chỉnh theo nhu cầu)
+            self.noiseFilter.gain.value = -30; // Giảm 30dB cho tần số bị lọc (điều chỉnh theo nhu cầu)
+
+            // Kết nối source -> noiseFilter -> analyser -> scriptProcessor
+            source.connect(self.noiseFilter);
+            self.noiseFilter.connect(self.analyser);
             self.analyser.connect(self.scriptProcessor);
             self.scriptProcessor.connect(self.audioContext.destination);
+
             self.scriptProcessor.addEventListener("audioprocess", function (event) {
                 const frequency = self.pitchDetector.do(
                     event.inputBuffer.getChannelData(0)
@@ -105,34 +113,15 @@ Tuner.prototype.init = function () {
     });
 };
 
-/**
- * get musical note from frequency
- *
- * @param {number} frequency
- * @returns {number}
- */
 Tuner.prototype.getNote = function (frequency) {
     const note = 12 * (Math.log(frequency / this.middleA) / Math.log(2));
     return Math.round(note) + this.semitone;
 };
 
-/**
- * get the musical note's standard frequency
- *
- * @param note
- * @returns {number}
- */
 Tuner.prototype.getStandardFrequency = function (note) {
     return this.middleA * Math.pow(2, (note - this.semitone) / 12);
 };
 
-/**
- * get cents difference between given frequency and musical note's standard frequency
- *
- * @param {number} frequency
- * @param {number} note
- * @returns {number}
- */
 Tuner.prototype.getCents = function (frequency, note) {
     const standardFrequency = this.getStandardFrequency(note);
     const cents = Math.floor(
@@ -141,11 +130,6 @@ Tuner.prototype.getCents = function (frequency, note) {
     return cents;
 };
 
-/**
- * play the musical note
- *
- * @param {number} frequency
- */
 Tuner.prototype.play = function (frequency) {
     if (!this.oscillator) {
         this.oscillator = this.audioContext.createOscillator();
